@@ -368,12 +368,15 @@ impl io::Write for Blob<'_> {
 
 impl io::Seek for Blob<'_> {
     /// Seek to an offset, in bytes, in BLOB.
+    ///
+    /// Returns an error if the resulting position is before the start or past
+    /// the end of the BLOB. The position is unchanged on error.
     #[inline]
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         let pos = match pos {
-            io::SeekFrom::Start(offset) => offset as i64,
-            io::SeekFrom::Current(offset) => i64::from(self.pos) + offset,
-            io::SeekFrom::End(offset) => i64::from(self.size()) + offset,
+            io::SeekFrom::Start(offset) => i128::from(offset),
+            io::SeekFrom::Current(offset) => i128::from(self.pos) + i128::from(offset),
+            io::SeekFrom::End(offset) => i128::from(self.size()) + i128::from(offset),
         };
 
         if pos < 0 {
@@ -381,7 +384,7 @@ impl io::Seek for Blob<'_> {
                 io::ErrorKind::InvalidInput,
                 "invalid seek to negative position",
             ))
-        } else if pos > i64::from(self.size()) {
+        } else if pos > i128::from(self.size()) {
             Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "invalid seek to position past end of blob",
@@ -480,6 +483,40 @@ mod test {
         // and return a write error
         blob.reopen(rowid)?;
         blob.write_all(b"0123456789x").unwrap_err();
+        Ok(())
+    }
+
+    #[test]
+    fn test_blob_seek_boundaries() -> Result<()> {
+        let (db, rowid) = db_with_test_blob()?;
+        let mut blob = db.blob_open(DatabaseName::Main, "test", "content", rowid, true)?;
+        blob.seek(SeekFrom::Start(5)).unwrap();
+
+        for seek in [
+            SeekFrom::Start(11),
+            SeekFrom::Start(i64::MAX as u64),
+            SeekFrom::Start(i64::MAX as u64 + 1),
+            SeekFrom::Start(u64::MAX),
+            SeekFrom::Current(-6),
+            SeekFrom::Current(6),
+            SeekFrom::Current(i64::MIN),
+            SeekFrom::Current(i64::MAX),
+            SeekFrom::End(-11),
+            SeekFrom::End(1),
+            SeekFrom::End(i64::MIN),
+            SeekFrom::End(i64::MAX),
+        ] {
+            let err = blob.seek(seek).unwrap_err();
+            assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput, "{seek:?}");
+            assert_eq!(blob.stream_position().unwrap(), 5, "{seek:?}");
+        }
+
+        assert_eq!(blob.seek(SeekFrom::Current(-5)).unwrap(), 0);
+        assert_eq!(blob.seek(SeekFrom::Current(10)).unwrap(), 10);
+        assert_eq!(blob.seek(SeekFrom::End(-10)).unwrap(), 0);
+        assert_eq!(blob.seek(SeekFrom::End(0)).unwrap(), 10);
+        assert_eq!(blob.seek(SeekFrom::Start(0)).unwrap(), 0);
+        assert_eq!(blob.seek(SeekFrom::Start(10)).unwrap(), 10);
         Ok(())
     }
 
