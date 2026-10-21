@@ -84,7 +84,7 @@ unsafe fn report_error(ctx: *mut sqlite3_context, err: &Error) {
     }
 }
 
-unsafe extern "C" fn free_boxed_value<T>(p: *mut c_void) {
+pub(crate) unsafe extern "C" fn free_boxed_value<T>(p: *mut c_void) {
     drop(Box::from_raw(p.cast::<T>()));
 }
 

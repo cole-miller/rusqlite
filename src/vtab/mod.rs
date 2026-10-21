@@ -17,6 +17,7 @@ use std::ptr;
 use std::slice;
 
 use crate::context::set_result;
+use crate::functions::free_boxed_value;
 use crate::error::{error_from_sqlite_code, to_sqlite_error};
 use crate::ffi;
 pub use crate::ffi::{sqlite3_vtab, sqlite3_vtab_cursor};
@@ -929,11 +930,6 @@ pub fn parameter(c_slice: &[u8]) -> Result<(&str, &str)> {
         }
     }
     Err(Error::ModuleError(format!("illegal argument: '{arg}'")))
-}
-
-// FIXME copy/paste from function.rs
-unsafe extern "C" fn free_boxed_value<T>(p: *mut c_void) {
-    drop(Box::from_raw(p.cast::<T>()));
 }
 
 unsafe extern "C" fn rust_create<'vtab, T>(
