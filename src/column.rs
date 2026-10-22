@@ -113,6 +113,8 @@ impl Statement<'_> {
     /// If there is no AS clause then the name of the column is unspecified and
     /// may change from one release of SQLite to the next.
     ///
+    /// Column names are matched case-insensitively using ASCII rules.
+    ///
     /// If associated DB schema can be altered concurrently, you should make
     /// sure that current statement has already been stepped once before
     /// calling this method.
