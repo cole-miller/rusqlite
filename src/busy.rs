@@ -1,5 +1,4 @@
 //! Busy handler (when the database is locked)
-use std::convert::TryInto;
 use std::mem;
 use std::os::raw::{c_int, c_void};
 use std::panic::catch_unwind;
@@ -25,12 +24,7 @@ impl Connection {
     /// Newly created connections currently have a default busy timeout of
     /// 5000ms, but this may be subject to change.
     pub fn busy_timeout(&self, timeout: Duration) -> Result<()> {
-        let ms: i32 = timeout
-            .as_secs()
-            .checked_mul(1000)
-            .and_then(|t| t.checked_add(timeout.subsec_millis().into()))
-            .and_then(|t| t.try_into().ok())
-            .expect("too big");
+        let ms = timeout.as_millis().min(i32::MAX as u128) as i32;
         self.db.borrow_mut().busy_timeout(ms)
     }
 
@@ -102,6 +96,12 @@ mod test {
             Some(ErrorCode::DatabaseBusy)
         );
         tx1.rollback()
+    }
+
+    #[test]
+    fn test_busy_timeout_large_duration() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+        db.busy_timeout(Duration::MAX)
     }
 
     #[test]
