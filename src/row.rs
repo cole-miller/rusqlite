@@ -305,7 +305,7 @@ impl<'stmt> Row<'stmt> {
     /// allowing data to be read out of a row without copying.
     ///
     /// This `ValueRef` is valid only as long as this Row, which is enforced by
-    /// it's lifetime. This means that while this method is completely safe,
+    /// its lifetime. This means that while this method is completely safe,
     /// it can be somewhat difficult to use, and most callers will be better
     /// served by [`get`](Row::get) or [`get_unwrap`](Row::get_unwrap).
     ///
@@ -329,7 +329,7 @@ impl<'stmt> Row<'stmt> {
     /// allowing data to be read out of a row without copying.
     ///
     /// This `ValueRef` is valid only as long as this Row, which is enforced by
-    /// it's lifetime. This means that while this method is completely safe,
+    /// its lifetime. This means that while this method is completely safe,
     /// it can be difficult to use, and most callers will be better served by
     /// [`get`](Row::get) or [`get_unwrap`](Row::get_unwrap).
     ///
