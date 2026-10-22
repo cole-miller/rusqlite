@@ -12,7 +12,7 @@ use crate::types::{ToSqlOutput, ValueRef};
 #[cfg(feature = "array")]
 use crate::vtab::array::{free_array, ARRAY_TYPE};
 
-// This function is inline despite it's size because what's in the ToSqlOutput
+// This function is inline despite its size because what's in the ToSqlOutput
 // is often known to the compiler, and thus const prop/DCE can substantially
 // simplify the function.
 #[inline]
