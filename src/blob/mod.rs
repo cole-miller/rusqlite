@@ -50,7 +50,7 @@
 //!    Using `MaybeUninit` here can be more efficient in some cases, but is
 //!    often inconvenient, so both are provided.
 //!
-//! 2. Exact/inexact refers to to whether or not the entire buffer must be
+//! 2. Exact/inexact refers to whether or not the entire buffer must be
 //!    filled in order for the call to be considered a success.
 //!
 //!    The "exact" functions require the provided buffer be entirely filled, or
